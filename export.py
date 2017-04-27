@@ -20,14 +20,14 @@ def main():
 		log_file.write(time_str + "\n")
 		log_file.close()
 
-		items = os.listdir(global_data.EXCEL_PATH)
+		items = os.listdir(global_data.excel_path)
 		for item in items:
 			if item[-5:] == ".xlsx":
 				util.read(item)
 
-	except Exception, e:
+	except Exception, ex:
 		print traceback.format_exc()
-		print e
+		print ex
 
 #	print "Covert to json finished. Please check 'error.txt' for errors."
 if __name__ == "__main__":

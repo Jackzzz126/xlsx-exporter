@@ -2,4 +2,5 @@
 global datas
 """
 
-EXCEL_PATH = "./excel/"
+excel_path = "./excel/"
+errors=[]
