@@ -19,7 +19,7 @@ def main():
 		items = os.listdir(global_data.excel_path)
 		for item in items:
 			if item[-5:] == ".xlsx":
-				export.read(item)
+				export.read_book(item)
 
 	except Exception, ex:
 		print traceback.format_exc()
