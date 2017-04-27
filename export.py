@@ -1,10 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-main log
-"""
-
 import os
 import time
 import traceback
