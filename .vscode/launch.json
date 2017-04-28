@@ -6,8 +6,8 @@
             "name": "Python",
             "type": "python",
             "request": "launch",
+            "program": "${workspaceRoot}/main.py",
             "stopOnEntry": false,
-            "program": "${file}",
             "debugOptions": [
                 "WaitOnAbnormalExit",
                 "WaitOnNormalExit",

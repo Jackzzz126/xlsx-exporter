@@ -1,3 +1,7 @@
+import time
+
+import global_data
+
 def pos_index_2_str(row_index, col_index):
 	col = col_index + 1
 	colStr = ""
@@ -13,3 +17,38 @@ def pos_index_2_str(row_index, col_index):
 				colStr = chr(ord("A") + 26 - 1) + colStr
 				col = col / 26 - 1
 	return colStr + str(row_index + 1)
+
+def log(log_str):
+	time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+	print time_str + " [LOG] " + log_str
+
+def error(log_str):
+	time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+	print time_str + " [ERR] " + log_str
+
+class Error(object):
+	file_name = ""
+	sheet_name = ""
+	pos = ""
+	pos = ""
+	err_msg = ""
+	def __init__(self, file_name, sheet_name, pos, err_msg=""):
+		self.file_name = file_name
+		self.sheet_name = sheet_name
+		self.pos = pos
+		self.err_msg = err_msg
+
+def add_error(file_name, sheet_name, row, col, err_msg=""):
+	err = Error(file_name, sheet_name, pos_index_2_str(row, col), err_msg)
+	global_data.gErrors.append(err)
+
+def write_errors():
+	log_file = open(global_data.excel_path + 'errors.txt', 'w')
+	time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+	log_file.write(time_str + "\n")
+
+	for _, v in enumerate(global_data.gErrors):
+		error("%s:%s %s	%s" % (v.file_name, v.sheet_name, v.pos, v.err_msg))
+		log_file.write("%s:%s %s	%s" % (v.file_name, v.sheet_name, v.pos, v.err_msg))
+
+	log_file.close()
