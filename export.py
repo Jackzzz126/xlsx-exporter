@@ -1,6 +1,7 @@
 import openpyxl
 
 import global_data
+import util
 
 class DataType(object):
 	data_type = ""
@@ -24,3 +25,11 @@ def read_book(file_name):
 
 def read_sheet(file_name, sheet):
 	print file_name[0:-5] + ":" + sheet.title
+
+	print sheet[util.pos_index_2_str(0, 0)].value
+	print sheet[util.pos_index_2_str(0, 1)].value
+
+	col = 0
+	while sheet[util.pos_index_2_str(0, col)].value != None:
+		print sheet[util.pos_index_2_str(0, col)].value
+		col += 1
