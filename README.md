@@ -24,11 +24,13 @@ python main.py or ./mail.py
 4. type describe json
 
 **data description**:
-dataType: int, float, string
+dataType: int, float, string, ref
+ref: ref sheet(bookName:sheetName)
 minValue: min value when dataType is int
 maxValue: max value when dataType is int
 minLen: min length when dataType is string
 maxLen: max length when dataType is string 
+regExp: regular expression to valid string
 notNull: true or false
 idType: id or combineid
 isArray: true or false, if true, values can't be string and seperated by ","
