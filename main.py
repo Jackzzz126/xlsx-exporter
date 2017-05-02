@@ -14,7 +14,7 @@ def main():
 		if os.path.isfile(global_data.excel_path + "errors.txt"):
 			os.remove(global_data.excel_path + "errors.txt")
 		export.run()
-		if global_data.gErrors:
+		if global_data.g_errors:
 			util.write_errors()
 			print "Export finished with error. Please check 'error.txt' for details."
 		else:

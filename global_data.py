@@ -3,5 +3,6 @@ global datas
 """
 
 excel_path = "./excel/"
-gErrors = []
-gTypes = {}
+g_errors = []
+g_types = {}
+g_datas = {}

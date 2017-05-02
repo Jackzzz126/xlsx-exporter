@@ -8,11 +8,15 @@ import util
 
 def run():
 	items = os.listdir(global_data.excel_path)
+
 	for item in items:
 		if item[-5:] == ".xlsx" and item[0:2] != "~$":
 			read_book_type(item)
+	if global_data.g_errors > 0:
+		return
 
-	if global_data.gErrors > 0:
+	valid_type()
+	if global_data.g_errors > 0:
 		return
 
 	for item in items:
@@ -34,42 +38,42 @@ def read_book_data(file_name):
 		read_sheet_data(file_name, sheet)
 
 def read_sheet_type(file_name, sheet):
-	keyFile = file_name[0:-5]
-	keySheet = sheet.title
-	if not keyFile in global_data.gTypes.keys():
-		global_data.gTypes[keyFile] = {}
-	if not keySheet in global_data.gTypes[keyFile].keys():
-		global_data.gTypes[keyFile][keySheet] = {}
+	book_name = file_name[0:-5]
+	sheet_name = sheet.title
+	if not book_name in global_data.g_types.keys():
+		global_data.g_types[book_name] = {}
+	if not sheet_name in global_data.g_types[book_name].keys():
+		global_data.g_types[book_name][sheet_name] = {}
 
 	col = 0
 	while sheet[util.pos_index_2_str(0, col)].value != None:
-		keyField = sheet[util.pos_index_2_str(0, col)].value
-		util.log("Reading type %s:%s	%s" % (keyFile, keySheet, keyField))
+		field_name = sheet[util.pos_index_2_str(0, col)].value
+		util.log("Reading type %s:%s	%s" % (book_name, sheet_name, field_name))
 
-		if keyField in global_data.gTypes[keyFile][keySheet].keys():
-			util.add_error(keyFile, keySheet, 0, col, "Duplicate data field")
+		if field_name in global_data.g_types[book_name][sheet_name].keys():
+			util.add_error(book_name, sheet_name, 0, col, "Duplicate data field")
 
-		global_data.gTypes[keyFile][keySheet][keyField] = read_type(keyFile, keySheet, sheet, col)
+		global_data.g_types[book_name][sheet_name][field_name] = read_type(book_name, sheet_name, sheet, col)
 
 		col += 1
 
 def read_sheet_data(file_name, sheet):
-	keyFile = file_name[0:-5]
-	keySheet = sheet.title
-	if not keyFile in global_data.gTypes.keys():
-		global_data.gTypes[keyFile] = {}
-	if not keySheet in global_data.gTypes[keyFile].keys():
-		global_data.gTypes[keyFile][keySheet] = {}
+	book_name = file_name[0:-5]
+	sheet_name = sheet.title
+	if not book_name in global_data.g_types.keys():
+		global_data.g_datas[book_name] = {}
+	if not sheet_name in global_data.g_types[book_name].keys():
+		global_data.g_datas[book_name][sheet_name] = {}
 
 	col = 0
 	while sheet[util.pos_index_2_str(0, col)].value != None:
-		keyField = sheet[util.pos_index_2_str(0, col)].value
-		util.log("Reading type %s:%s	%s" % (keyFile, keySheet, keyField))
+		field_name = sheet[util.pos_index_2_str(0, col)].value
+		util.log("Reading type %s:%s	%s" % (book_name, sheet_name, field_name))
 
-		if keyField in global_data.gTypes[keyFile][keySheet].keys():
-			util.add_error(keyFile, keySheet, 0, col, "Duplicate data field")
+		if field_name in global_data.g_types[book_name][sheet_name].keys():
+			util.add_error(book_name, sheet_name, 0, col, "Duplicate data field")
 
-		global_data.gTypes[keyFile][keySheet][keyField] = read_type(keyFile, keySheet, sheet, col)
+		global_data.g_types[book_name][sheet_name][field_name] = read_type(book_name, sheet_name, sheet, col)
 
 		col += 1
 
@@ -86,7 +90,7 @@ class DataType(object):
 	allowd_values = []
 	ref = ""
 
-def read_type(keyFile, keySheet, sheet, col):
+def read_type(book_name, sheet_name, sheet, col):
 	try:
 		type_desc = json.loads(sheet[util.pos_index_2_str(3, col)].value)
 		data_type = DataType()
@@ -187,5 +191,17 @@ def read_type(keyFile, keySheet, sheet, col):
 
 	except Exception:
 		print traceback.format_exc()
-		util.add_error(keyFile, keySheet, 3, col, "Type describe error")
+		util.add_error(book_name, sheet_name, 3, col, "Type describe error")
 		return None
+
+def valid_type():
+	for book_name, sheetTypes in enumerate(global_data.g_types):
+		for sheet_name, fieldTypes in sheetTypes:
+			col = 0
+			for field_name, data_type in fieldTypes:
+				col += 1
+				if data_type.data_type == "ref":
+					ref_names = data_type.ref.split(":")
+					if not ref_names[0] in global_data.g_types.keys() or\
+						not ref_names[1] in global_data.g_types[ref_names[0]].keys():
+						util.add_error(book_name, sheet_name, 3, col, "Ref not exist")

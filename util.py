@@ -40,14 +40,14 @@ class Error(object):
 
 def add_error(file_name, sheet_name, row, col, err_msg=""):
 	err = Error(file_name, sheet_name, pos_index_2_str(row, col), err_msg)
-	global_data.gErrors.append(err)
+	global_data.g_errors.append(err)
 
 def write_errors():
 	log_file = open(global_data.excel_path + 'errors.txt', 'w')
 	time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 	log_file.write(time_str + "\n")
 
-	for _, v in enumerate(global_data.gErrors):
+	for _, v in enumerate(global_data.g_errors):
 		error("%s:%s %s	%s" % (v.file_name, v.sheet_name, v.pos, v.err_msg))
 		log_file.write("%s:%s %s	%s" % (v.file_name, v.sheet_name, v.pos, v.err_msg))
 
