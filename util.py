@@ -49,6 +49,6 @@ def write_errors():
 
 	for _, v in enumerate(global_data.g_errors):
 		error("%s:%s %s	%s" % (v.file_name, v.sheet_name, v.pos, v.err_msg))
-		log_file.write("%s:%s %s	%s" % (v.file_name, v.sheet_name, v.pos, v.err_msg))
+		log_file.write("%s:%s %s	%s\n" % (v.file_name, v.sheet_name, v.pos, v.err_msg))
 
 	log_file.close()
