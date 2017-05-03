@@ -12,34 +12,34 @@ def run():
 	for item in items:
 		if item[-5:] == ".xlsx" and item[0:2] != "~$":
 			read_book_type(item)
-	if global_data.g_errors > 0:
+	if len(global_data.g_errors) > 0:
 		return
 
 	valid_type()
-	if global_data.g_errors > 0:
+	if len(global_data.g_errors) > 0:
 		return
 
 	for item in items:
 		if item[-5:] == ".xlsx" and item[0:2] != "~$":
-			pass
-			#read_book_data(item)
+			read_book_data(item)
 
 def read_book_type(file_name):
 	book = openpyxl.load_workbook(filename=global_data.excel_path + file_name, read_only=True)
+	book_name = file_name[0:-5]
 	for sheet in book:
 		if sheet.title[0:1] == "_":
 			break
-		read_sheet_type(file_name, sheet)
+		read_sheet_type(book_name, sheet)
 
 def read_book_data(file_name):
 	book = openpyxl.load_workbook(filename=global_data.excel_path + file_name, read_only=True)
+	book_name = file_name[0:-5]
 	for sheet in book:
 		if sheet.title[0:1] == "_":
 			break
-		read_sheet_data(file_name, sheet)
+		read_sheet_data(book_name, sheet)
 
-def read_sheet_type(file_name, sheet):
-	book_name = file_name[0:-5]
+def read_sheet_type(book_name, sheet):
 	sheet_name = sheet.title
 	if not book_name in global_data.g_types.keys():
 		global_data.g_types[book_name] = {}
@@ -52,29 +52,31 @@ def read_sheet_type(file_name, sheet):
 		util.log("Reading type %s:%s	%s" % (book_name, sheet_name, field_name))
 
 		if field_name in global_data.g_types[book_name][sheet_name].keys():
-			util.add_error(book_name, sheet_name, 0, col, "Duplicate data field")
+			util.add_pos_error(book_name, sheet_name, 0, col, "Duplicate data field")
 
-		global_data.g_types[book_name][sheet_name][field_name] = read_type(book_name, sheet_name, sheet, col)
+		global_data.g_types[book_name][sheet_name][field_name] = \
+			read_type(book_name, sheet_name, sheet, col)
 
 		col += 1
 
-def read_sheet_data(file_name, sheet):
-	book_name = file_name[0:-5]
+def read_sheet_data(book_name, sheet):
 	sheet_name = sheet.title
-	if not book_name in global_data.g_types.keys():
+	if not book_name in global_data.g_datas.keys():
 		global_data.g_datas[book_name] = {}
-	if not sheet_name in global_data.g_types[book_name].keys():
+	if not sheet_name in global_data.g_datas[book_name].keys():
 		global_data.g_datas[book_name][sheet_name] = {}
 
 	col = 0
 	while sheet[util.pos_index_2_str(0, col)].value != None:
 		field_name = sheet[util.pos_index_2_str(0, col)].value
-		util.log("Reading type %s:%s	%s" % (book_name, sheet_name, field_name))
+		row = 4
+		while sheet[util.pos_index_2_str(row, col)].value != None:
+			pos_str = util.pos_index_2_str(row, col)
+			util.log("Reading data %s:%s	%s" % (book_name, sheet_name, pos_str))
 
-		if field_name in global_data.g_types[book_name][sheet_name].keys():
-			util.add_error(book_name, sheet_name, 0, col, "Duplicate data field")
+			read_data(book_name, sheet_name, field_name, pos_str, sheet[pos_str].value)
 
-		global_data.g_types[book_name][sheet_name][field_name] = read_type(book_name, sheet_name, sheet, col)
+			row += 1
 
 		col += 1
 
@@ -208,17 +210,19 @@ def read_type(book_name, sheet_name, sheet, col):
 
 	except Exception:
 		print traceback.format_exc()
-		util.add_error(book_name, sheet_name, 3, col, "Type describe error")
+		util.add_pos_error(book_name, sheet_name, 3, col, "Type describe error")
 		return None
 
 def valid_type():
-	for book_name, sheetTypes in enumerate(global_data.g_types):
-		for sheet_name, fieldTypes in sheetTypes:
-			col = 0
-			for field_name, data_type in fieldTypes:
-				col += 1
+	for book_name in global_data.g_types:
+		for sheet_name in global_data.g_types[book_name]:
+			for field_name in global_data.g_types[book_name][sheet_name]:
+				data_type = global_data.g_types[book_name][sheet_name][field_name]
 				if data_type.data_type == "ref":
 					ref_names = data_type.ref.split(":")
 					if not ref_names[0] in global_data.g_types.keys() or\
 						not ref_names[1] in global_data.g_types[ref_names[0]].keys():
-						util.add_error(book_name, sheet_name, 3, col, "Ref not exist")
+						util.add_field_error(book_name, sheet_name, 3, field_name, "Ref not exist")
+
+def read_data(book_name, sheet_name, field_name, pos_str, value):
+	pass
