@@ -5,9 +5,9 @@ import traceback
 import os
 import argparse
 
-import export
-import global_data
-import util
+from util import export
+from util import global_data
+from util import util
 
 def main():
 	"""main function"""

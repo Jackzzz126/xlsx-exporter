@@ -6,6 +6,7 @@ Export excel files to other format and check errors.
 
 
 ## Usage
+copy main.py and util directory to your excel file directory an run
 python main.py or ./mail.py
 
 ## Excel
