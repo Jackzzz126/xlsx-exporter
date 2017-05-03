@@ -3,6 +3,7 @@
 
 import traceback
 import os
+import argparse
 
 import export
 import global_data
@@ -11,6 +12,15 @@ import util
 def main():
 	"""main function"""
 	try:
+		#parse args
+		parser = argparse.ArgumentParser(description="Excel exporter")
+		parser.add_argument('-p', dest="path", help='path of the excel files, default "./excel"')
+		args = parser.parse_args()
+		if args.path:
+			if args.path[-1:] != "/":
+				args.path += "/"
+			global_data.excel_path = args.path
+
 		if os.path.isfile(global_data.excel_path + "errors.txt"):
 			os.remove(global_data.excel_path + "errors.txt")
 		export.run()
