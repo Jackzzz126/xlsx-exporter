@@ -3,8 +3,8 @@ import json
 import traceback
 import openpyxl
 
-import global_data
-import util
+import util.global_data as global_data
+import util.comm as comm
 
 def run():
 	items = os.listdir(global_data.excel_path)
@@ -12,11 +12,11 @@ def run():
 	for item in items:
 		if item[-5:] == ".xlsx" and item[0:2] != "~$":
 			read_book_type(item)
-	if len(global_data.g_errors) > 0:
+	if global_data.g_errors:
 		return
 
 	valid_type()
-	if len(global_data.g_errors) > 0:
+	if global_data.g_errors:
 		return
 
 	for item in items:
@@ -47,12 +47,12 @@ def read_sheet_type(book_name, sheet):
 		global_data.g_types[book_name][sheet_name] = {}
 
 	col = 0
-	while sheet[util.pos_index_2_str(0, col)].value != None:
-		field_name = sheet[util.pos_index_2_str(0, col)].value
-		util.log("Reading type %s:%s	%s" % (book_name, sheet_name, field_name))
+	while sheet[comm.pos_index_2_str(0, col)].value != None:
+		field_name = sheet[comm.pos_index_2_str(0, col)].value
+		comm.log("Reading type %s:%s	%s" % (book_name, sheet_name, field_name))
 
 		if field_name in global_data.g_types[book_name][sheet_name].keys():
-			util.add_pos_error(book_name, sheet_name, 0, col, "Duplicate data field")
+			comm.add_pos_error(book_name, sheet_name, 0, col, "Duplicate data field")
 
 		global_data.g_types[book_name][sheet_name][field_name] = \
 			read_type(book_name, sheet_name, sheet, col)
@@ -67,14 +67,14 @@ def read_sheet_data(book_name, sheet):
 		global_data.g_datas[book_name][sheet_name] = {}
 
 	col = 0
-	while sheet[util.pos_index_2_str(0, col)].value != None:
-		field_name = sheet[util.pos_index_2_str(0, col)].value
+	while sheet[comm.pos_index_2_str(0, col)].value != None:
+		field_name = sheet[comm.pos_index_2_str(0, col)].value
 		row = 4
-		while sheet[util.pos_index_2_str(row, col)].value != None:
-			pos_str = util.pos_index_2_str(row, col)
-			util.log("Reading data %s:%s	%s" % (book_name, sheet_name, pos_str))
+		while sheet[comm.pos_index_2_str(row, col)].value != None:
+			pos_str = comm.pos_index_2_str(row, col)
+			comm.log("Reading data %s:%s	%s" % (book_name, sheet_name, pos_str))
 
-			read_data(book_name, sheet_name, field_name, pos_str, sheet[pos_str].value)
+			read_data(book_name, sheet_name, field_name, row, col, sheet[pos_str].value)
 
 			row += 1
 
@@ -95,12 +95,13 @@ class DataType(object):
 
 def read_type(book_name, sheet_name, sheet, col):
 	try:
-		type_desc = json.loads(sheet[util.pos_index_2_str(3, col)].value)
+		type_desc = json.loads(sheet[comm.pos_index_2_str(3, col)].value)
 		data_type = DataType()
 		if type_desc["dataType"] == "ref":
 			if not isinstance(type_desc["ref"], unicode):
 				raise Exception("")
 
+			data_type.data_type = type_desc["dataType"]
 			data_type.ref = type_desc["ref"]
 
 			return data_type
@@ -210,7 +211,7 @@ def read_type(book_name, sheet_name, sheet, col):
 
 	except Exception:
 		print traceback.format_exc()
-		util.add_pos_error(book_name, sheet_name, 3, col, "Type describe error")
+		comm.add_pos_error(book_name, sheet_name, 3, col, "Type describe error")
 		return None
 
 def valid_type():
@@ -222,7 +223,24 @@ def valid_type():
 					ref_names = data_type.ref.split(":")
 					if not ref_names[0] in global_data.g_types.keys() or\
 						not ref_names[1] in global_data.g_types[ref_names[0]].keys():
-						util.add_field_error(book_name, sheet_name, 3, field_name, "Ref not exist")
+						comm.add_field_error(book_name, sheet_name, 3, field_name, "Ref not exist")
 
-def read_data(book_name, sheet_name, field_name, pos_str, value):
-	pass
+def read_data(book_name, sheet_name, field_name, row, col, raw_value):
+	data_type = global_data.g_types[book_name][sheet_name][field_name]
+	if not data_type:
+		comm.add_pos_error(book_name, sheet_name, row, col, "Data type is None")
+
+	if data_type.data_type == "int":
+		print raw_value
+		print type(raw_value)
+	elif data_type.data_type == "float":
+		print raw_value
+		print type(raw_value)
+	elif data_type.data_type == "string":
+		print raw_value
+		print type(raw_value)
+	elif data_type.data_type == "ref":
+		print raw_value
+		print type(raw_value)
+	else:
+		comm.add_pos_error(book_name, sheet_name, row, col, "Unknown data type")

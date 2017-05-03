@@ -7,7 +7,7 @@ import argparse
 
 from util import export
 from util import global_data
-from util import util
+from util import comm
 
 def main():
 	"""main function"""
@@ -25,7 +25,7 @@ def main():
 			os.remove(global_data.excel_path + "errors.txt")
 		export.run()
 		if global_data.g_errors:
-			util.write_errors()
+			comm.write_errors()
 			print "Export finished with error. Please check 'error.txt' for details."
 		else:
 			print "Export finished success."
