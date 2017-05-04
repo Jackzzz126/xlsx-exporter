@@ -247,13 +247,27 @@ def read_type(book_name, sheet_name, sheet, col):
 def valid_type():
 	for book_name in global_data.g_types:
 		for sheet_name in global_data.g_types[book_name]:
+			id_count = 0
 			for field_name in global_data.g_types[book_name][sheet_name]:
 				data_type = global_data.g_types[book_name][sheet_name][field_name]
+
+				# check ref
 				if data_type.data_type == "ref":
 					ref_names = data_type.ref.split(":")
 					if not ref_names[0] in global_data.g_types.keys() or\
 						not ref_names[1] in global_data.g_types[ref_names[0]].keys():
 						comm.add_field_error(book_name, sheet_name, 3, field_name, "Ref not exist")
+
+				# id not null
+				if data_type.id_type != "" and not data_type.not_null:
+					comm.add_field_error(book_name, sheet_name, 3, field_name, "Id can be null")
+
+				# id field count
+				if data_type.id_type == "id":
+					id_count += 1
+
+			if id_count > 1:
+				comm.add_field_error(book_name, sheet_name, 3, field_name, "Multi id field")
 
 def read_data(book_name, sheet_name, field_name, row, col, raw_value):
 	try:
