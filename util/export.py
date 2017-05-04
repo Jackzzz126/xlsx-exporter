@@ -66,19 +66,49 @@ def read_sheet_data(book_name, sheet):
 	if not sheet_name in global_data.g_datas[book_name].keys():
 		global_data.g_datas[book_name][sheet_name] = {}
 
-	col = 0
-	while sheet[comm.pos_index_2_str(0, col)].value != None:
-		field_name = sheet[comm.pos_index_2_str(0, col)].value
-		row = 4
-		while sheet[comm.pos_index_2_str(row, col)].value != None:
+	row = 4
+	while sheet[comm.pos_index_2_str(row, 0)].value != None:
+		key = ""
+		line_data = {}
+
+		#get key
+		col = 0
+		while sheet[comm.pos_index_2_str(0, col)].value != None:
+			field_name = sheet[comm.pos_index_2_str(0, col)].value
+			data_type = global_data.g_types[book_name][sheet_name][field_name]
+			pos_str = comm.pos_index_2_str(row, col)
+			if data_type.id_type == "id":
+				key = str(sheet[pos_str].value)
+				break
+			elif data_type.id_type == "combineid":
+				if key == "":
+					key = str(sheet[pos_str].value)
+				else:
+					key += "_" + str(sheet[pos_str].value)
+			else:
+				pass
+			col += 1
+
+		col = 0
+		while sheet[comm.pos_index_2_str(0, col)].value != None:
+			field_name = sheet[comm.pos_index_2_str(0, col)].value
 			pos_str = comm.pos_index_2_str(row, col)
 			comm.log("Reading data %s:%s	%s" % (book_name, sheet_name, pos_str))
+			cell_data = read_data(book_name, sheet_name, field_name, row, col, sheet[pos_str].value)
+			line_data[field_name] = cell_data
 
-			read_data(book_name, sheet_name, field_name, row, col, sheet[pos_str].value)
+			col += 1
 
-			row += 1
+		if key == "":
+			if not global_data.g_datas[book_name][sheet]:
+				global_data.g_datas[book_name][sheet] = []
+			global_data.g_datas[book_name][sheet].append(line_data)
+		else:
+			if not global_data.g_datas[book_name][sheet_name]:
+				global_data.g_datas[book_name][sheet] = {}
+			global_data.g_datas[book_name][sheet][key] = line_data
 
-		col += 1
+		row += 1
 
 class DataType(object):
 	data_type = ""
@@ -122,7 +152,7 @@ def read_type(book_name, sheet_name, sheet, col):
 
 			if "idType" in type_desc.keys() and \
 				type_desc["idType"] != "id" and \
-				type_desc["idType"] != "combinedid":
+				type_desc["idType"] != "combineid":
 				raise Exception("")
 
 			data_type.data_type = type_desc["dataType"]
@@ -226,21 +256,25 @@ def valid_type():
 						comm.add_field_error(book_name, sheet_name, 3, field_name, "Ref not exist")
 
 def read_data(book_name, sheet_name, field_name, row, col, raw_value):
-	data_type = global_data.g_types[book_name][sheet_name][field_name]
-	if not data_type:
-		comm.add_pos_error(book_name, sheet_name, row, col, "Data type is None")
+	try:
+		data_type = global_data.g_types[book_name][sheet_name][field_name]
+		if not data_type:
+			comm.add_pos_error(book_name, sheet_name, row, col, "Data type is None")
 
-	if data_type.data_type == "int":
-		print raw_value
-		print type(raw_value)
-	elif data_type.data_type == "float":
-		print raw_value
-		print type(raw_value)
-	elif data_type.data_type == "string":
-		print raw_value
-		print type(raw_value)
-	elif data_type.data_type == "ref":
-		print raw_value
-		print type(raw_value)
-	else:
-		comm.add_pos_error(book_name, sheet_name, row, col, "Unknown data type")
+		if data_type.data_type == "int":
+			print raw_value
+			print type(raw_value)
+		elif data_type.data_type == "float":
+			print raw_value
+			print type(raw_value)
+		elif data_type.data_type == "string":
+			print raw_value
+			print type(raw_value)
+		elif data_type.data_type == "ref":
+			print raw_value
+			print type(raw_value)
+		else:
+			comm.add_pos_error(book_name, sheet_name, row, col, "Unknown data type")
+	except Exception:
+		print traceback.format_exc()
+		return None
