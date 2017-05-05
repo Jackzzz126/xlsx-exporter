@@ -22,6 +22,10 @@ def run():
 	for item in items:
 		if item[-5:] == ".xlsx" and item[0:2] != "~$":
 			read_book_data(item)
+	if global_data.g_errors:
+		return
+
+	valid_refs()
 
 def read_book_type(file_name):
 	book = openpyxl.load_workbook(filename=global_data.excel_path + file_name, read_only=True)
@@ -392,3 +396,41 @@ def read_data(book_name, sheet_name, field_name, row, col, raw_value):
 	else:
 		comm.add_pos_error(book_name, sheet_name, row, col, "Unknown data type")
 		return None
+
+def valid_refs():
+	for book_name in global_data.g_types:
+		for sheet_name in global_data.g_types[book_name]:
+			for field_name in global_data.g_types[book_name][sheet_name]:
+				data_type = global_data.g_types[book_name][sheet_name][field_name]
+
+				if data_type.data_type != "ref":
+					return
+
+				if isinstance(global_data.g_datas[book_name][sheet_name], dict):
+					for key in global_data.g_datas[book_name][sheet_name]:
+						value = global_data.g_datas[book_name][sheet_name][key][field_name]
+						if isinstance(value, list):
+							for i in range(0, len(value)):
+								valid_ref_value_key(key, value[i], book_name, sheet_name, field_name)
+						else:
+							valid_ref_value_key(key, value, book_name, sheet_name, field_name)
+				elif isinstance(global_data.g_datas[book_name][sheet_name], list):
+					for i in range(0, len(global_data.g_datas[book_name][sheet_name])):
+						value = global_data.g_datas[book_name][sheet_name][i][field_name]
+						if isinstance(value, list):
+							for j in range(0, len(value)):
+								valid_ref_value_index(i, value[j], book_name, sheet_name, field_name)
+						else:
+							valid_ref_value_index(i, value, book_name, sheet_name, field_name)
+
+	def valid_ref_value_key(key, value, book_name, sheet_name, field_name):
+		data_type = global_data.g_types[book_name][sheet_name][field_name]
+		ref_names = data_type.ref.split(":")
+		if value not in global_data.g_datas[ref_names[0]][ref_names[1]].keys():
+			comm.add_key_error(book_name, sheet_name, key, field_name, "Ref not exist")
+
+	def valid_ref_value_index(index, value, book_name, sheet_name, field_name):
+		data_type = global_data.g_types[book_name][sheet_name][field_name]
+		ref_names = data_type.ref.split(":")
+		if value not in global_data.g_datas[ref_names[0]][ref_names[1]].keys():
+			comm.add_field_error(book_name, sheet_name, index + 4, field_name, "Ref not exist")

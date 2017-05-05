@@ -1,6 +1,6 @@
 import time
 
-import global_data
+from util import global_data
 
 def pos_index_2_str(row_index, col_index):
 	col = col_index + 1
@@ -43,6 +43,10 @@ def add_pos_error(file_name, sheet_name, row, col, err_msg=""):
 
 def add_field_error(file_name, sheet_name, row, field_name, err_msg=""):
 	err = Error(file_name, sheet_name, field_name + ":" + str(row + 1), err_msg)
+	global_data.g_errors.append(err)
+
+def add_key_error(file_name, sheet_name, key, field_name, err_msg=""):
+	err = Error(file_name, sheet_name, field_name + ":" + key, err_msg)
 	global_data.g_errors.append(err)
 
 def write_errors():
