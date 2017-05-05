@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import openpyxl
 
 import util.global_data as global_data
@@ -335,6 +336,12 @@ def read_data(book_name, sheet_name, field_name, row, col, raw_value):
 						break
 				if not in_allowed:
 					comm.add_pos_error(book_name, sheet_name, row, col, "String data not in allowed values")
+
+			if data_type.reg_exp:
+				pattern = re.compile(data_type.reg_exp)
+				match = pattern.match(value_str)
+				if not match or match.group() != value_str:
+					comm.add_pos_error(book_name, sheet_name, row, col, "String regular expression valid faile")
 
 		if raw_value is None:
 			return ""
