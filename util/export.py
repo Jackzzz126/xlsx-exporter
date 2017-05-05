@@ -1,6 +1,5 @@
 import os
 import json
-import traceback
 import openpyxl
 
 import util.global_data as global_data
@@ -55,7 +54,7 @@ def read_sheet_type(book_name, sheet):
 			comm.add_pos_error(book_name, sheet_name, 0, col, "Duplicate data field")
 
 		global_data.g_types[book_name][sheet_name][field_name] = \
-			read_type(book_name, sheet_name, sheet, col)
+			read_type(sheet, col)
 
 		col += 1
 
@@ -117,137 +116,125 @@ class DataType(object):
 	min_len = 0
 	max_len = 0
 	reg_exp = ""
-	not_null = True
 	id_type = ""
 	is_array = False
 	allowed_values = []
 	ref = ""
 
-def read_type(book_name, sheet_name, sheet, col):
-	try:
-		type_desc = json.loads(sheet[comm.pos_index_2_str(3, col)].value)
-		data_type = DataType()
-		if type_desc["dataType"] == "ref":
-			if not isinstance(type_desc["ref"], unicode):
-				raise Exception("")
-
-			data_type.data_type = type_desc["dataType"]
-			data_type.ref = type_desc["ref"]
-
-			return data_type
-
-		elif type_desc["dataType"] == "int":
-			if not isinstance(type_desc["minValue"], int) or\
-				not isinstance(type_desc["maxValue"], int) or\
-				type_desc["minValue"] > type_desc["maxValue"] or\
-				("notNull" in type_desc.keys() and not isinstance(type_desc["notNull"], bool)) or\
-				("isArray" in type_desc.keys() and not isinstance(type_desc["isArray"], bool)) or\
-				("allowedValues" in type_desc.keys() and not isinstance(type_desc["allowedValues"], list)):
-				raise Exception("")
-
-			if "allowedValues" in type_desc.keys():
-				for v in type_desc["allowedValues"]:
-					if not isinstance(v, int):
-						raise Exception("")
-
-			if "idType" in type_desc.keys() and \
-				type_desc["idType"] != "id" and \
-				type_desc["idType"] != "combineid":
-				raise Exception("")
-
-			data_type.data_type = type_desc["dataType"]
-			data_type.min_value = type_desc["minValue"]
-			data_type.max_value = type_desc["maxValue"]
-			if "notNull" in type_desc.keys():
-				data_type.not_null = type_desc["notNull"]
-			if "idType" in type_desc.keys():
-				data_type.id_type = type_desc["idType"]
-			if "isArray" in type_desc.keys():
-				data_type.is_array = type_desc["isArray"]
-			if "allowedValues" in type_desc.keys():
-				data_type.allowed_values = type_desc["allowedValues"]
-
-			return data_type
-		elif type_desc["dataType"] == "float":
-			if not isinstance(type_desc["minValue"], float) or\
-				not isinstance(type_desc["maxValue"], float) or\
-				type_desc["minValue"] > type_desc["maxValue"] or\
-				("notNull" in type_desc.keys() and not isinstance(type_desc["notNull"], bool)) or\
-				("isArray" in type_desc.keys() and not isinstance(type_desc["isArray"], bool)) or\
-				("allowedValues" in type_desc.keys() and not isinstance(type_desc["allowedValues"], list)):
-				raise Exception("")
-
-			if "allowedValues" in type_desc.keys():
-				for v in type_desc["allowedValues"]:
-					if not isinstance(v, float):
-						raise Exception("")
-
-			if "idType" in type_desc.keys() and \
-				type_desc["idType"] != "id" and \
-				type_desc["idType"] != "combinedid":
-				raise Exception("")
-
-			data_type.data_type = type_desc["dataType"]
-			data_type.min_value = type_desc["minValue"]
-			data_type.max_value = type_desc["maxValue"]
-			if "notNull" in type_desc.keys():
-				data_type.not_null = type_desc["notNull"]
-			if "idType" in type_desc.keys():
-				data_type.id_type = type_desc["idType"]
-			if "isArray" in type_desc.keys():
-				data_type.is_array = type_desc["isArray"]
-			if "allowedValues" in type_desc.keys():
-				data_type.allowed_values = type_desc["allowedValues"]
-
-			return data_type
-		elif type_desc["dataType"] == "string":
-			if not isinstance(type_desc["minLen"], int) or\
-				not isinstance(type_desc["maxLen"], int) or\
-				type_desc["minLen"] < 1 or\
-				type_desc["minLen"] > type_desc["maxLen"] or\
-				("regExp" in type_desc.keys() and not isinstance(type_desc["regExp"], unicode)) or\
-				("notNull" in type_desc.keys() and not isinstance(type_desc["notNull"], bool)) or\
-				("isArray" in type_desc.keys() and not isinstance(type_desc["isArray"], bool)) or\
-				("allowedValues" in type_desc.keys() and not isinstance(type_desc["allowedValues"], list)):
-				raise Exception("")
-
-			if "allowedValues" in type_desc.keys():
-				for v in type_desc["allowedValues"]:
-					if not isinstance(v, unicode):
-						raise Exception("")
-
-			if "idType" in type_desc.keys() and \
-				type_desc["idType"] != "id" and \
-				type_desc["idType"] != "combinedid":
-				raise Exception("")
-
-			data_type.data_type = type_desc["dataType"]
-			data_type.min_len = type_desc["minLen"]
-			data_type.max_len = type_desc["maxLen"]
-			if "regExp" in type_desc.keys():
-				data_type.reg_exp = type_desc["regExp"]
-			if "notNull" in type_desc.keys():
-				data_type.not_null = type_desc["notNull"]
-			if "idType" in type_desc.keys():
-				data_type.id_type = type_desc["idType"]
-			if "isArray" in type_desc.keys():
-				data_type.is_array = type_desc["isArray"]
-			if "allowedValues" in type_desc.keys():
-				data_type.allowed_values = type_desc["allowedValues"]
-
-			return data_type
-		else:
+def read_type(sheet, col):
+	type_desc = json.loads(sheet[comm.pos_index_2_str(3, col)].value)
+	data_type = DataType()
+	if type_desc["dataType"] == "ref":
+		if not isinstance(type_desc["ref"], unicode):
 			raise Exception("")
 
-	except Exception:
-		print traceback.format_exc()
-		comm.add_pos_error(book_name, sheet_name, 3, col, "Type describe error")
-		return None
+		data_type.data_type = type_desc["dataType"]
+		data_type.ref = type_desc["ref"]
+
+		return data_type
+
+	elif type_desc["dataType"] == "int":
+		if not isinstance(type_desc["minValue"], int) or\
+			not isinstance(type_desc["maxValue"], int) or\
+			type_desc["minValue"] > type_desc["maxValue"] or\
+			("notNull" in type_desc.keys() and not isinstance(type_desc["notNull"], bool)) or\
+			("isArray" in type_desc.keys() and not isinstance(type_desc["isArray"], bool)) or\
+			("allowedValues" in type_desc.keys() and not isinstance(type_desc["allowedValues"], list)):
+			raise Exception("")
+
+		if "allowedValues" in type_desc.keys():
+			for v in type_desc["allowedValues"]:
+				if not isinstance(v, int):
+					raise Exception("")
+
+		if "idType" in type_desc.keys() and \
+			type_desc["idType"] != "id" and \
+			type_desc["idType"] != "combineid":
+			raise Exception("")
+
+		data_type.data_type = type_desc["dataType"]
+		data_type.min_value = type_desc["minValue"]
+		data_type.max_value = type_desc["maxValue"]
+		if "idType" in type_desc.keys():
+			data_type.id_type = type_desc["idType"]
+		if "isArray" in type_desc.keys():
+			data_type.is_array = type_desc["isArray"]
+		if "allowedValues" in type_desc.keys():
+			data_type.allowed_values = type_desc["allowedValues"]
+
+		return data_type
+	elif type_desc["dataType"] == "float":
+		if not isinstance(type_desc["minValue"], float) or\
+			not isinstance(type_desc["maxValue"], float) or\
+			type_desc["minValue"] > type_desc["maxValue"] or\
+			("notNull" in type_desc.keys() and not isinstance(type_desc["notNull"], bool)) or\
+			("isArray" in type_desc.keys() and not isinstance(type_desc["isArray"], bool)) or\
+			("allowedValues" in type_desc.keys() and not isinstance(type_desc["allowedValues"], list)):
+			raise Exception("")
+
+		if "allowedValues" in type_desc.keys():
+			for v in type_desc["allowedValues"]:
+				if not isinstance(v, float):
+					raise Exception("")
+
+		if "idType" in type_desc.keys() and \
+			type_desc["idType"] != "id" and \
+			type_desc["idType"] != "combinedid":
+			raise Exception("")
+
+		data_type.data_type = type_desc["dataType"]
+		data_type.min_value = type_desc["minValue"]
+		data_type.max_value = type_desc["maxValue"]
+		if "idType" in type_desc.keys():
+			data_type.id_type = type_desc["idType"]
+		if "isArray" in type_desc.keys():
+			data_type.is_array = type_desc["isArray"]
+		if "allowedValues" in type_desc.keys():
+			data_type.allowed_values = type_desc["allowedValues"]
+
+		return data_type
+	elif type_desc["dataType"] == "string":
+		if not isinstance(type_desc["minLen"], int) or\
+			not isinstance(type_desc["maxLen"], int) or\
+			type_desc["minLen"] < 1 or\
+			type_desc["minLen"] > type_desc["maxLen"] or\
+			("regExp" in type_desc.keys() and not isinstance(type_desc["regExp"], unicode)) or\
+			("notNull" in type_desc.keys() and not isinstance(type_desc["notNull"], bool)) or\
+			("isArray" in type_desc.keys() and not isinstance(type_desc["isArray"], bool)) or\
+			("allowedValues" in type_desc.keys() and not isinstance(type_desc["allowedValues"], list)):
+			raise Exception("")
+
+		if "allowedValues" in type_desc.keys():
+			for v in type_desc["allowedValues"]:
+				if not isinstance(v, unicode):
+					raise Exception("")
+
+		if "idType" in type_desc.keys() and \
+			type_desc["idType"] != "id" and \
+			type_desc["idType"] != "combinedid":
+			raise Exception("")
+
+		data_type.data_type = type_desc["dataType"]
+		data_type.min_len = type_desc["minLen"]
+		data_type.max_len = type_desc["maxLen"]
+		if "regExp" in type_desc.keys():
+			data_type.reg_exp = type_desc["regExp"]
+		if "idType" in type_desc.keys():
+			data_type.id_type = type_desc["idType"]
+		if "isArray" in type_desc.keys():
+			data_type.is_array = type_desc["isArray"]
+		if "allowedValues" in type_desc.keys():
+			data_type.allowed_values = type_desc["allowedValues"]
+
+		return data_type
+	else:
+		raise Exception("")
 
 def valid_type():
 	for book_name in global_data.g_types:
 		for sheet_name in global_data.g_types[book_name]:
 			id_count = 0
+			dup_field_name = ""
 			for field_name in global_data.g_types[book_name][sheet_name]:
 				data_type = global_data.g_types[book_name][sheet_name][field_name]
 
@@ -258,37 +245,105 @@ def valid_type():
 						not ref_names[1] in global_data.g_types[ref_names[0]].keys():
 						comm.add_field_error(book_name, sheet_name, 3, field_name, "Ref not exist")
 
-				# id not null
-				if data_type.id_type != "" and not data_type.not_null:
-					comm.add_field_error(book_name, sheet_name, 3, field_name, "Id can be null")
-
 				# id field count
 				if data_type.id_type == "id":
 					id_count += 1
+					dup_field_name = field_name
 
 			if id_count > 1:
-				comm.add_field_error(book_name, sheet_name, 3, field_name, "Multi id field")
+				comm.add_field_error(book_name, sheet_name, 3, dup_field_name, "Multi id field")
 
 def read_data(book_name, sheet_name, field_name, row, col, raw_value):
-	try:
-		data_type = global_data.g_types[book_name][sheet_name][field_name]
-		if not data_type:
-			comm.add_pos_error(book_name, sheet_name, row, col, "Data type is None")
+	data_type = global_data.g_types[book_name][sheet_name][field_name]
 
-		if data_type.data_type == "int":
-			print raw_value
-			print type(raw_value)
-		elif data_type.data_type == "float":
-			print raw_value
-			print type(raw_value)
-		elif data_type.data_type == "string":
-			print raw_value
-			print type(raw_value)
-		elif data_type.data_type == "ref":
-			print raw_value
-			print type(raw_value)
+	if data_type.data_type == "int":
+		def valid_int(value_str):
+			value = int(value_str)
+			if value < data_type.min_value or value > data_type.max_value:
+				comm.add_pos_error(book_name, sheet_name, row, col, "Int data out of range")
+
+		if raw_value is None:
+			return 0
+		if data_type.is_array:
+			values = []
+			value_strs = str(raw_value).split(",")
+			if not value_strs:
+				comm.add_pos_error(book_name, sheet_name, row, col, "Array length is zero")
+				return values
+			for i in range(0, len(value_strs)):
+				if not value_strs[i]:
+					comm.add_pos_error(book_name, sheet_name, row, col, "Array member is null")
+					continue
+				valid_int(value_strs[i])
+				values.append(int(value_strs[i]))
+			return values
 		else:
-			comm.add_pos_error(book_name, sheet_name, row, col, "Unknown data type")
-	except Exception:
-		print traceback.format_exc()
+			valid_int(str(raw_value))
+			return int(raw_value)
+	elif data_type.data_type == "float":
+		def valid_float(value_str):
+			value = float(value_str)
+			if value < data_type.min_value or value > data_type.max_value:
+				comm.add_pos_error(book_name, sheet_name, row, col, "Float data out of range")
+
+		if raw_value is None:
+			return 0.0
+		if data_type.is_array:
+			value_strs = str(raw_value).split(",")
+			values = []
+			if not value_strs:
+				comm.add_pos_error(book_name, sheet_name, row, col, "Array length is zero")
+				return values
+			for i in range(0, len(value_strs)):
+				if not value_strs[i]:
+					comm.add_pos_error(book_name, sheet_name, row, col, "Array member is null")
+					continue
+				valid_float(value_strs[i])
+				values.append(float(value_strs[i]))
+			return values
+		else:
+			valid_float(str(raw_value))
+			return float(raw_value)
+	elif data_type.data_type == "string":
+		def valid_str(value_str):
+			if len(value_str) < data_type.min_len or len(value_str) > data_type.max_len:
+				comm.add_pos_error(book_name, sheet_name, row, col, "String length out of range")
+
+		if raw_value is None:
+			return ""
+		if data_type.is_array:
+			value_strs = str(raw_value).split(",")
+			values = []
+			if not value_strs:
+				comm.add_pos_error(book_name, sheet_name, row, col, "Array length is zero")
+				return values
+			for i in range(0, len(value_strs)):
+				if not value_strs[i]:
+					comm.add_pos_error(book_name, sheet_name, row, col, "Array member is null")
+					continue
+				valid_str(value_strs[i])
+				values.append(value_strs[i])
+			return values
+		else:
+			valid_str(str(raw_value))
+			return str(raw_value)
+	elif data_type.data_type == "ref":
+		if raw_value is None:
+			return ""
+		if data_type.is_array:
+			value_strs = str(raw_value).split(",")
+			values = []
+			if not value_strs:
+				comm.add_pos_error(book_name, sheet_name, row, col, "Array length is zero")
+				return values
+			for i in range(0, len(value_strs)):
+				if not value_strs[i]:
+					comm.add_pos_error(book_name, sheet_name, row, col, "Array member is null")
+					continue
+				values.append(value_strs[i])
+			return values
+		else:
+			return str(raw_value)
+	else:
+		comm.add_pos_error(book_name, sheet_name, row, col, "Unknown data type")
 		return None
