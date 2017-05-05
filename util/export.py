@@ -26,6 +26,12 @@ def run():
 		return
 
 	valid_refs()
+	if global_data.g_errors:
+		return
+
+	for book_name in global_data.g_datas:
+		for sheet_name in global_data.g_datas[book_name]:
+			write_js(global_data.g_datas[book_name][sheet_name], sheet_name)
 
 def read_book_type(file_name):
 	book = openpyxl.load_workbook(filename=global_data.excel_path + file_name, read_only=True)
@@ -104,13 +110,13 @@ def read_sheet_data(book_name, sheet):
 			col += 1
 
 		if key == "":
-			if not global_data.g_datas[book_name][sheet]:
-				global_data.g_datas[book_name][sheet] = []
-			global_data.g_datas[book_name][sheet].append(line_data)
+			if not global_data.g_datas[book_name][sheet_name]:
+				global_data.g_datas[book_name][sheet_name] = []
+			global_data.g_datas[book_name][sheet_name].append(line_data)
 		else:
 			if not global_data.g_datas[book_name][sheet_name]:
-				global_data.g_datas[book_name][sheet] = {}
-			global_data.g_datas[book_name][sheet][key] = line_data
+				global_data.g_datas[book_name][sheet_name] = {}
+			global_data.g_datas[book_name][sheet_name][key] = line_data
 
 		row += 1
 
@@ -241,7 +247,7 @@ def valid_type():
 		for sheet_name in global_data.g_types[book_name]:
 			if sheet_name in sheet_name_dict.keys():
 				comm.add_sheet_error(book_name, sheet_name, "Duplicate sheet name")
-				sheet_name_dict[sheet_name] = sheet_name
+			sheet_name_dict[sheet_name] = sheet_name
 	for book_name in global_data.g_types:
 		for sheet_name in global_data.g_types[book_name]:
 			id_count = 0
@@ -256,15 +262,15 @@ def valid_type():
 					if not ref_names[0] in global_data.g_types.keys() or\
 						not ref_names[1] in global_data.g_types[ref_names[0]].keys():
 						comm.add_field_row_error(book_name, sheet_name, 3, field_name, "Ref not exist")
-
-					ref_has_id = False
-					for ref_field_name in global_data.g_types[ref_names[0]][ref_names[1]]:
-						ref_data_type = global_data.g_types[ref_names[0]][ref_names[1]][ref_field_name]
-						if ref_data_type.id_type != "":
-							ref_has_id = True
-							break
-					if not ref_has_id:
-						comm.add_field_row_error(book_name, sheet_name, 3, field_name, "Ref has no id")
+					else:
+						ref_has_id = False
+						for ref_field_name in global_data.g_types[ref_names[0]][ref_names[1]]:
+							ref_data_type = global_data.g_types[ref_names[0]][ref_names[1]][ref_field_name]
+							if ref_data_type.id_type != "":
+								ref_has_id = True
+								break
+						if not ref_has_id:
+							comm.add_field_row_error(book_name, sheet_name, 3, field_name, "Ref has no id")
 
 				# id field count
 				if data_type.id_type == "id":
@@ -450,3 +456,11 @@ def valid_refs():
 		ref_names = data_type.ref.split(":")
 		if value not in global_data.g_datas[ref_names[0]][ref_names[1]].keys():
 			comm.add_field_row_error(book_name, sheet_name, index + 4, field_name, "Ref not exist")
+
+def write_js(data, sheet_name):
+	json_file = open(global_data.excel_path + sheet_name + '.json', 'w')
+	if isinstance(data, dict):
+		json_file.write(json.dumps(data, sort_keys=True, indent=4, encoding="utf-8", ensure_ascii=False))
+	elif isinstance(data, list):
+		json_file.write(json.dumps(data, sort_keys=True, indent=4, encoding="utf-8", ensure_ascii=False))
+	json_file.close()
