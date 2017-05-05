@@ -236,6 +236,12 @@ def read_type(sheet, col):
 		raise Exception("")
 
 def valid_type():
+	sheet_name_dict = {}
+	for book_name in global_data.g_types:
+		for sheet_name in global_data.g_types[book_name]:
+			if sheet_name in sheet_name_dict.keys():
+				comm.add_sheet_error(book_name, sheet_name, "Duplicate sheet name")
+				sheet_name_dict[sheet_name] = sheet_name
 	for book_name in global_data.g_types:
 		for sheet_name in global_data.g_types[book_name]:
 			id_count = 0
@@ -249,7 +255,7 @@ def valid_type():
 
 					if not ref_names[0] in global_data.g_types.keys() or\
 						not ref_names[1] in global_data.g_types[ref_names[0]].keys():
-						comm.add_field_error(book_name, sheet_name, 3, field_name, "Ref not exist")
+						comm.add_field_row_error(book_name, sheet_name, 3, field_name, "Ref not exist")
 
 					ref_has_id = False
 					for ref_field_name in global_data.g_types[ref_names[0]][ref_names[1]]:
@@ -258,7 +264,7 @@ def valid_type():
 							ref_has_id = True
 							break
 					if not ref_has_id:
-						comm.add_field_error(book_name, sheet_name, 3, field_name, "Ref has no id")
+						comm.add_field_row_error(book_name, sheet_name, 3, field_name, "Ref has no id")
 
 				# id field count
 				if data_type.id_type == "id":
@@ -266,7 +272,7 @@ def valid_type():
 					dup_field_name = field_name
 
 			if id_count > 1:
-				comm.add_field_error(book_name, sheet_name, 3, dup_field_name, "Multi id field")
+				comm.add_field_row_error(book_name, sheet_name, 3, dup_field_name, "Multi id field")
 
 def read_data(book_name, sheet_name, field_name, row, col, raw_value):
 	data_type = global_data.g_types[book_name][sheet_name][field_name]
@@ -437,10 +443,10 @@ def valid_refs():
 		data_type = global_data.g_types[book_name][sheet_name][field_name]
 		ref_names = data_type.ref.split(":")
 		if value not in global_data.g_datas[ref_names[0]][ref_names[1]].keys():
-			comm.add_key_error(book_name, sheet_name, key, field_name, "Ref not exist")
+			comm.add_field_key_error(book_name, sheet_name, key, field_name, "Ref not exist")
 
 	def valid_ref_value_index(index, value, book_name, sheet_name, field_name):
 		data_type = global_data.g_types[book_name][sheet_name][field_name]
 		ref_names = data_type.ref.split(":")
 		if value not in global_data.g_datas[ref_names[0]][ref_names[1]].keys():
-			comm.add_field_error(book_name, sheet_name, index + 4, field_name, "Ref not exist")
+			comm.add_field_row_error(book_name, sheet_name, index + 4, field_name, "Ref not exist")

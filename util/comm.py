@@ -41,12 +41,16 @@ def add_pos_error(file_name, sheet_name, row, col, err_msg=""):
 	err = Error(file_name, sheet_name, pos_index_2_str(row, col), err_msg)
 	global_data.g_errors.append(err)
 
-def add_field_error(file_name, sheet_name, row, field_name, err_msg=""):
+def add_field_row_error(file_name, sheet_name, row, field_name, err_msg=""):
 	err = Error(file_name, sheet_name, field_name + ":" + str(row + 1), err_msg)
 	global_data.g_errors.append(err)
 
-def add_key_error(file_name, sheet_name, key, field_name, err_msg=""):
+def add_field_key_error(file_name, sheet_name, key, field_name, err_msg=""):
 	err = Error(file_name, sheet_name, field_name + ":" + key, err_msg)
+	global_data.g_errors.append(err)
+
+def add_sheet_error(file_name, sheet_name, err_msg=""):
+	err = Error(file_name, sheet_name, err_msg)
 	global_data.g_errors.append(err)
 
 def write_errors():
