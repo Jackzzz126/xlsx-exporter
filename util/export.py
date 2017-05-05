@@ -262,6 +262,15 @@ def read_data(book_name, sheet_name, field_name, row, col, raw_value):
 			if value < data_type.min_value or value > data_type.max_value:
 				comm.add_pos_error(book_name, sheet_name, row, col, "Int data out of range")
 
+			if data_type.allowed_values:
+				in_allowed = False
+				for i in range(0, len(data_type.allowed_values)):
+					if data_type.allowed_values[i] == value:
+						in_allowed = True
+						break
+				if not in_allowed:
+					comm.add_pos_error(book_name, sheet_name, row, col, "Int data not in allowed values")
+
 		if raw_value is None:
 			return 0
 		if data_type.is_array:
@@ -286,6 +295,15 @@ def read_data(book_name, sheet_name, field_name, row, col, raw_value):
 			if value < data_type.min_value or value > data_type.max_value:
 				comm.add_pos_error(book_name, sheet_name, row, col, "Float data out of range")
 
+			if data_type.allowed_values:
+				in_allowed = False
+				for i in range(0, len(data_type.allowed_values)):
+					if (data_type.allowed_values[i] - value) ** 2 < 0.00001:
+						in_allowed = True
+						break
+				if not in_allowed:
+					comm.add_pos_error(book_name, sheet_name, row, col, "Float data not in allowed values")
+
 		if raw_value is None:
 			return 0.0
 		if data_type.is_array:
@@ -309,6 +327,15 @@ def read_data(book_name, sheet_name, field_name, row, col, raw_value):
 			if len(value_str) < data_type.min_len or len(value_str) > data_type.max_len:
 				comm.add_pos_error(book_name, sheet_name, row, col, "String length out of range")
 
+			if data_type.allowed_values:
+				in_allowed = False
+				for i in range(0, len(data_type.allowed_values)):
+					if data_type.allowed_values[i] == value_str:
+						in_allowed = True
+						break
+				if not in_allowed:
+					comm.add_pos_error(book_name, sheet_name, row, col, "String data not in allowed values")
+
 		if raw_value is None:
 			return ""
 		if data_type.is_array:
@@ -328,6 +355,15 @@ def read_data(book_name, sheet_name, field_name, row, col, raw_value):
 			valid_str(str(raw_value))
 			return str(raw_value)
 	elif data_type.data_type == "ref":
+		def valid_ref(value_str):
+			if data_type.allowed_values:
+				in_allowed = False
+				for i in range(0, len(data_type.allowed_values)):
+					if data_type.allowed_values[i] == value_str:
+						in_allowed = True
+						break
+				if not in_allowed:
+					comm.add_pos_error(book_name, sheet_name, row, col, "Refence data not in allowed values")
 		if raw_value is None:
 			return ""
 		if data_type.is_array:
@@ -340,9 +376,11 @@ def read_data(book_name, sheet_name, field_name, row, col, raw_value):
 				if not value_strs[i]:
 					comm.add_pos_error(book_name, sheet_name, row, col, "Array member is null")
 					continue
+				valid_ref(value_strs[i])
 				values.append(value_strs[i])
 			return values
 		else:
+			valid_ref(str(raw_value))
 			return str(raw_value)
 	else:
 		comm.add_pos_error(book_name, sheet_name, row, col, "Unknown data type")
