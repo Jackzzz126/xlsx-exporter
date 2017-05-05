@@ -246,9 +246,19 @@ def valid_type():
 				# check ref
 				if data_type.data_type == "ref":
 					ref_names = data_type.ref.split(":")
+
 					if not ref_names[0] in global_data.g_types.keys() or\
 						not ref_names[1] in global_data.g_types[ref_names[0]].keys():
 						comm.add_field_error(book_name, sheet_name, 3, field_name, "Ref not exist")
+
+					ref_has_id = False
+					for ref_field_name in global_data.g_types[ref_names[0]][ref_names[1]]:
+						ref_data_type = global_data.g_types[ref_names[0]][ref_names[1]][ref_field_name]
+						if ref_data_type.id_type != "":
+							ref_has_id = True
+							break
+					if not ref_has_id:
+						comm.add_field_error(book_name, sheet_name, 3, field_name, "Ref has no id")
 
 				# id field count
 				if data_type.id_type == "id":
